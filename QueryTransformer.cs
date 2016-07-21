@@ -19,37 +19,36 @@ namespace Zueva_Natalia_Expression
         /// <returns>измененное выражение</returns>
         protected override Expression VisitBinary(BinaryExpression node)
         {
-            Expression newLeft = node.Left;
-            Expression newRight = node.Right;
-
-            bool IsRightTypeLeft = node.Left is ConstantExpression || node.Left is ParameterExpression;
-            bool IsRightTypeRight = node.Right is ConstantExpression || node.Right is ParameterExpression;
-            if (!IsRightTypeLeft)
-                newLeft = Visit(node.Left);
-            if (!IsRightTypeRight)
-                newRight = Visit(node.Right);
-
+            Expression newExpression = null;
 
             if (node.NodeType == ExpressionType.Add)
             {
+                bool isRightTypeLeft = node.Left is ConstantExpression || node.Left is ParameterExpression;
+                bool isRightTypeRight = node.Right is ConstantExpression || node.Right is ParameterExpression;
+
+                if (!isRightTypeLeft || !isRightTypeRight)
+                    newExpression = base.VisitBinary(node);
+
                 ConstantExpression constant = null;
                 ParameterExpression param = null;
-                if (newLeft is ConstantExpression)
-                    constant = (ConstantExpression)newLeft;
-                else if (newRight is ConstantExpression)
-                    constant = (ConstantExpression)newRight;
-                if (newLeft is ParameterExpression)
-                    param = (ParameterExpression)newLeft;
-                else if (newRight is ParameterExpression)
-                    param = (ParameterExpression)newRight;
+                if (node.Left is ConstantExpression)
+                    constant = (ConstantExpression)node.Left;
+                else if (node.Right is ConstantExpression)
+                    constant = (ConstantExpression)node.Right;
+                if (node.Left is ParameterExpression)
+                    param = (ParameterExpression)node.Left;
+                else if (node.Right is ParameterExpression)
+                    param = (ParameterExpression)node.Right;
 
                 if ((int)constant.Value == 1 && param != null)
                 {
                     return Expression.PreIncrementAssign(param);
                 }
             }
+            else
+                newExpression = base.VisitBinary(node);
 
-            return node.Update(newLeft, null, newRight);
+            return newExpression;
 
         }
     }
